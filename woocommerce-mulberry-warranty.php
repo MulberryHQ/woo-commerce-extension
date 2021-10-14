@@ -166,7 +166,7 @@ if (!class_exists('WC_Mulberry_Warranty')) {
                 sync_date timestamp NULL DEFAULT NULL,
               PRIMARY KEY (entity_id),
               KEY order_id (order_id),
-              CONSTRAINT `order_id` FOREIGN KEY (`order_id`) REFERENCES `{$wpdb->prefix}wp_posts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+              CONSTRAINT `order_id` FOREIGN KEY (`order_id`) REFERENCES `{$wpdb->prefix}posts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
             ) $charset_collate;";
 
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

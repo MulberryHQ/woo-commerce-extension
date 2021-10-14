@@ -39,6 +39,16 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
      */
     private $numericFields = [];
 
+    /**
+     * @var WC_Mulberry_Logger
+     */
+    private $logger;
+
+    public function __construct()
+    {
+        $this->logger = new WC_Mulberry_Logger();
+    }
+
     private function get_table()
     {
         /** @var \wpdb $wpdb */
@@ -221,14 +231,19 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
      * @param false $returnSingleRow
      * @return false|mixed
      */
-    public function find(array $filter, $condition = '=', $returnSingleRow = false)
+    public function find(array $filter = [], $condition = '=', $returnSingleRow = false)
     {
         global $wpdb;
 
         try {
-            $sql = 'SELECT * FROM `' . $this->get_table() . '` WHERE ';
+            $sql = 'SELECT * FROM `' . $this->get_table() . '`';
 
             $conditionCounter = 1;
+
+            if (count($filter) > 0) {
+                $sql .= ' WHERE ';
+            }
+
             foreach ($filter as $field => $value) {
                 if ($conditionCounter > 1) {
                     $sql .= ' AND ';
@@ -262,7 +277,8 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
             }
 
             return $result;
-        } catch (Exception $ex) {
+        } catch (Exception $e) {
+            $this->logger->log($e->getMessage());
             return false;
         }
     }
