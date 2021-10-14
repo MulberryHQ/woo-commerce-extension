@@ -21,23 +21,23 @@ class WC_Mulberry_Queue_Processor
 
     /**
      * @param $order
-     * @param $actionType
+     * @param $action_type
      *
      * @throws Exception
      */
-    public function process($order, $actionType)
+    public function process($order, $action_type)
     {
         try {
-            $queue = $this->get_by_order_id_and_action_type($order->get_id(), $actionType);
+            $queue = $this->get_by_order_id_and_action_type($order->get_id(), $action_type);
 
             if (!$queue) {
                 throw new Exception(
                     __(sprintf('Invalid action type for order "#%1$s" and type "%2$s" is missing',
-                        $order->get_order_number(), $actionType), 'woocommerce-mulberry-warranty')
+                        $order->get_order_number(), $action_type), 'woocommerce-mulberry-warranty')
                 );
             }
 
-            switch ($actionType) {
+            switch ($action_type) {
                 case 'order':
                     $send_order = new WC_Mulberry_Api_Rest_Send_Order();
                     $response = $send_order->send_order($order);
@@ -59,8 +59,12 @@ class WC_Mulberry_Queue_Processor
                 $this->logger->log(sprintf('Queue processor sync failed - %s', json_encode($response)));
             }
 
+            $date = as_get_datetime_object();
+            ActionScheduler_TimezoneHelper::set_local_timezone($date);
+            $date_local = $date->format('Y-m-d H:i:s');
+
             $queue->set('sync_status', $response['status']);
-            $queue->set('sync_date', time());
+            $queue->set('sync_date', $date_local);
             $queue->save();
 
         } catch (Exception $e) {
@@ -76,11 +80,8 @@ class WC_Mulberry_Queue_Processor
      */
     public function get_by_order_id_and_action_type($order_id, $action_type)
     {
-        /**
-         * @TODO - Load the record from the custom table filtered by the "order_id" and "action_type" column values.
-         */
         $queue_model = new WC_Mulberry_Queue_Model();
 
-        return $queue_model->find(array('order_id' => $order_id, 'action_type' => $action_type), '=', true);
+        return $queue_model->get_by_order_id_and_action_type($order_id, $action_type);
     }
 }

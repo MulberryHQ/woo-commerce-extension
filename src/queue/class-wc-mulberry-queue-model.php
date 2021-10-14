@@ -22,7 +22,7 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
      *
      * @var string
      */
-    private $pk = 'id';
+    private $pk = 'entity_id';
 
     /**
      * @var array
@@ -113,6 +113,8 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
                 $this->$key = (int)$value;
             }
         }
+
+        return $this;
     }
 
     /**
@@ -130,7 +132,7 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
         global $wpdb;
 
         $result = $wpdb->get_results(
-            $wpdb->prepare("SELECT * FROM {$this->get_table()} WHERE id = %d", $id)
+            $wpdb->prepare("SELECT * FROM {$this->get_table()} WHERE entity_id = %d", $id)
         );
 
         /**
@@ -194,35 +196,42 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
 
     public function save()
     {
-        $date = as_get_datetime_object();
-
-        ActionScheduler_TimezoneHelper::set_local_timezone($date);
-        $date_local = $date->format('Y-m-d H:i:s');
-
         /** @var \wpdb $wpdb */
         global $wpdb;
 
         $data = [
-            $this->pk => $this->get('id'),
+            $this->pk => $this->get($this->pk),
             'order_id' => $this->get('order_id'),
             'action_type' => $this->get('action_type'),
             'sync_status' => $this->get('sync_status'),
-            'sync_date' => $date_local,
+            'sync_date' => $this->get('sync_date'),
         ];
 
-        return $wpdb->replace($this->get_table(), $data, ['%d', '%d', '%s', '%s', '%d']);
+        return $wpdb->replace($this->get_table(), $data, ['%d', '%d', '%s', '%s', '%s']);
     }
 
     /**
      * @param $id
      * @return mixed
      */
-    public function delete($id)
+    public function delete()
     {
         /** @var \wpdb $wpdb */
         global $wpdb;
 
-        return $wpdb->delete($this->get_table(), [$this->pk => $this->get('id')], ['%d']);
+        return $wpdb->delete($this->get_table(), [$this->pk => $this->get($this->pk)], ['%d']);
+    }
+
+    /**
+     * @param $id
+     * @return mixed
+     */
+    public function delete_by_id($id)
+    {
+        /** @var \wpdb $wpdb */
+        global $wpdb;
+
+        return $wpdb->delete($this->get_table(), [$this->pk => $id], ['%d']);
     }
 
     /**
@@ -273,13 +282,36 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
              * if you only want to return one record make the $returnSingleRow TRUE
              */
             if (count($result) == 1 && $returnSingleRow) {
-                $result = $result[0];
+                $result = $this->convert_result_to_model($result[0]);
             }
 
-            return $result;
+            $data = [];
+            foreach ($result as $item) {
+                $data[] = $this->convert_result_to_model($item);
+            }
+
+            return $data;
         } catch (Exception $e) {
             $this->logger->log($e->getMessage());
             return false;
         }
+    }
+
+    private function convert_result_to_model($result)
+    {
+        $model = new WC_Mulberry_Queue_Model();
+
+        return $model->applyKeys($result);
+    }
+
+    /**
+     * @param $order_id
+     * @param $action_type
+     *
+     * @return false|WC_Mulberry_Queue_Model
+     */
+    public function get_by_order_id_and_action_type($order_id, $action_type)
+    {
+        return $this->find(array('order_id' => $order_id, 'action_type' => $action_type), '=', true);
     }
 }
