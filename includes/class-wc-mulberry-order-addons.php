@@ -24,8 +24,10 @@ class WC_Mulberry_Order_Addons
      */
     public function process_order_place_hooks($result, $order_id)
     {
-        $this->mulberry_send_order_hook($result, $order_id);
-        $this->mulberry_send_cart_data_hook($result, $order_id);
+        $order = wc_get_order($order_id);
+
+        $this->mulberry_send_order_hook($result, $order);
+        $this->mulberry_send_cart_data_hook($result, $order);
 
         return $result;
     }
@@ -37,7 +39,9 @@ class WC_Mulberry_Order_Addons
      */
     public function process_order_cancel_hooks($order_id)
     {
-        $this->mulberry_cancel_order_hook($order_id);
+        $order = wc_get_order($order_id);
+
+        $this->mulberry_cancel_order_hook($order);
 
         return $order_id;
     }
@@ -46,17 +50,19 @@ class WC_Mulberry_Order_Addons
      * Register order in Mulberry system
      *
      * @param $result
-     * @param $order_id
+     * @param WC_Order $order
      * @return $this
-     * @throws Exception
      */
-    private function mulberry_send_order_hook($result, $order_id)
+    private function mulberry_send_order_hook($result, WC_Order $order)
     {
-        if (WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes') {
-            $order = wc_get_order($order_id);
+        $is_module_active = WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes';
+        $send_order = new WC_Mulberry_Api_Rest_Send_Order();
 
-            $send_order = new WC_Mulberry_Api_Rest_Send_Order();
-            $send_order->send_order($order);
+        if ($is_module_active && $send_order->order_has_warranty_products($order)) {
+            $queue = new WC_Mulberry_Queue_Model();
+            $queue->set('order_id', $order->get_id());
+            $queue->set('action_type', 'order');
+            $queue->save();
         }
 
         return $this;
@@ -65,15 +71,13 @@ class WC_Mulberry_Order_Addons
     /**
      * Send hook to cancel Mulberry warranty order
      *
-     * @param $order_id
+     * @param WC_Order $order
      * @return $this
      * @throws Exception
      */
-    private function mulberry_cancel_order_hook($order_id)
+    private function mulberry_cancel_order_hook(WC_Order $order)
     {
         if (WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes') {
-            $order = wc_get_order($order_id);
-
             $send_order = new WC_Mulberry_Api_Rest_Cancel_Order();
             $send_order->cancel_order($order);
         }
@@ -85,17 +89,20 @@ class WC_Mulberry_Order_Addons
      * Send cart data hook
      *
      * @param $result
-     * @param $order_id
+     * @param WC_Order $order
      * @return $this
      * @throws Exception
      */
-    private function mulberry_send_cart_data_hook($result, $order_id)
+    private function mulberry_send_cart_data_hook($result, WC_Order $order)
     {
-        if (WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes') {
-            $order = wc_get_order($order_id);
+        $is_module_active = WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes';
+        $is_post_purchase_enabled = WC_Integration_Mulberry_Warranty::get_config_value('send_cart_data') === 'yes';
 
-            $send_order = new WC_Mulberry_Api_Rest_Send_Cart();
-            $send_order->send_cart($order);
+        if ($is_module_active && $is_post_purchase_enabled) {
+            $queue = new WC_Mulberry_Queue_Model();
+            $queue->set('order_id', $order->get_id());
+            $queue->set('action_type', 'cart');
+            $queue->save();
         }
 
         return $this;

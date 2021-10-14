@@ -4,8 +4,20 @@
  * Description: A Mulberry extended warranty WooCommerce integration plugin.
  * Author: GetMulberry.com
  * Author URI: https://getmulberry.com/
- * Version: 1.0.0
+ * Version: 1.1.0
  */
+
+/**
+ * Register custom interfaces
+ */
+function register_mulberry_interfaces()
+{
+    include_once 'src/queue/interface-wc-mulberry-queue-model.php';
+}
+
+register_mulberry_interfaces();
+
+register_activation_hook( __FILE__, array( 'WC_Mulberry_Warranty', 'install' ) );
 
 if (!class_exists('WC_Mulberry_Warranty')) {
     class WC_Mulberry_Warranty
@@ -27,7 +39,9 @@ if (!class_exists('WC_Mulberry_Warranty')) {
         public function init()
         {
             $this->register_exceptions();
+            $this->register_loggers();
             $this->register_integrations();
+            $this->register_custom_models();
             $this->register_templates();
             $this->register_addons();
             $this->register_api_services();
@@ -98,6 +112,23 @@ if (!class_exists('WC_Mulberry_Warranty')) {
         }
 
         /**
+         * Register custom Mulberry logger
+         */
+        private function register_loggers()
+        {
+            include_once 'src/logger/wc-mulberry-logger.php';
+        }
+
+        /**
+         * Register custom models
+         */
+        private function register_custom_models()
+        {
+            include_once 'src/queue/class-wc-mulberry-queue-model.php';
+            include_once 'src/queue/class-wc-mulberry-queue-processor.php';
+        }
+
+        /**
          * Add a new integration section to WooCommerce.
          *
          * @param $integrations
@@ -119,6 +150,28 @@ if (!class_exists('WC_Mulberry_Warranty')) {
             $settings = array('settings' => '<a href="' . menu_page_url(WC_SETTINGS_SLUG, false) . '&tab=integration&section=mulberry-warranty">Settings</a>');
 
             return array_merge($settings, $actions);
+        }
+
+        public function install()
+        {
+            global $wpdb;
+            $charset_collate = $wpdb->get_charset_collate();
+            $table = $wpdb->prefix . WC_Mulberry_Queue_Model_Interface::TABLE_NAME;
+
+            $sql = "CREATE TABLE IF NOT EXISTS `{$table}` (
+                entity_id BIGINT UNSIGNED NOT NULL auto_increment,
+                order_id BIGINT UNSIGNED NOT NULL,
+                action_type varchar(32) DEFAULT NULL,
+                sync_status varchar(32) DEFAULT NULL,
+                sync_date timestamp NULL DEFAULT NULL,
+              PRIMARY KEY (entity_id),
+              KEY order_id (order_id),
+              CONSTRAINT `order_id` FOREIGN KEY (`order_id`) REFERENCES `{$wpdb->prefix}wp_posts` (`id`) ON DELETE CASCADE ON UPDATE NO ACTION
+            ) $charset_collate;";
+
+            require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
+
+            dbDelta($sql);
         }
     }
 

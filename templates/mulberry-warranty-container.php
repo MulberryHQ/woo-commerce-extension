@@ -29,22 +29,35 @@ if (!$settings['active'] === 'yes') {
     return;
 }
 
+$sku = $product->get_sku() ? $product->get_sku() : $product->get_id();
+$gallery = [];
+foreach ($product->get_gallery_image_ids() as $attachment_id) {
+    $gallery[] = wp_get_attachment_url($attachment_id);
+}
+
 if ($product->is_in_stock()): ?>
     <div class="mulberry-container-wrapper">
         <div class="mulberry-inline-container"></div>
+        <input type="hidden" id="warranty_hash" name="warranty[hash]" value=""/>
+        <input type="hidden" id="warranty_sku" name="warranty[sku]" value="<?php echo esc_html($sku); ?>"/>
         <input type="hidden" id="warranty" name="mulberry_warranty" value=""/>
 
         <script type="text/javascript">
             window.mulberryProductData = {
                 product: {
-                    id: "<?php echo $product->get_sku(); ?>",
+                    id: "<?php echo esc_html($sku); ?>",
                     title: "<?php echo $product->get_name(); ?>",
                     price: <?php echo $product->get_price(); ?>,
-                    description: "<?php echo wc_format_content($product->get_description()); ?>"
-                },
-                originalSku: "<?php echo $product->get_sku(); ?>",
-                originalPrice: <?php echo (float) $product->get_price(); ?>,
-                originalDescription: "<?php echo wc_format_content($product->get_description()); ?>"
+                    url: "<?php echo $product->get_permalink(); ?>"
+                    //images: <?php //echo json_encode($gallery); ?>//,
+                    //meta: {
+                    //    breadcrumbs: <?php //echo $this->getBreadcrumbsInfo(); ?>//,
+                    //},
+                    //description: "<?php //echo wc_format_content($product->get_description()); ?>//"
+                }
+                //originalSku: "<?php //echo $product->get_sku(); ?>//",
+                //originalPrice: <?php //echo (float) $product->get_price(); ?>//,
+                //originalDescription: "<?php //echo wc_format_content($product->get_description()); ?>//"
             };
 
             window.mulberryConfigData = {

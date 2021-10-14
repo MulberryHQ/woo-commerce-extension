@@ -50,6 +50,7 @@ class WC_Mulberry_Api_Rest_Service
 
             $args = array(
                 'timeout' => 5,
+                'connect_timeout' => 5,
                 'httpversion' => '1.1',
                 'method' => $method,
                 'headers' => $this->headers,

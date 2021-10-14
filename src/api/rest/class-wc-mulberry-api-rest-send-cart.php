@@ -46,10 +46,6 @@ class WC_Mulberry_Api_Rest_Send_Cart
      */
     public function send_cart(WC_Order $order)
     {
-        if (!WC_Integration_Mulberry_Warranty::get_config_value('send_cart_data') === 'yes') {
-            return array();
-        }
-
         $this->order = $order;
         $this->prepare_items_payload();
 
@@ -68,6 +64,10 @@ class WC_Mulberry_Api_Rest_Send_Cart
          * @var $item WC_Order_Item
          */
         foreach ($this->order->get_items() as $item) {
+            if ($item->get_meta('mulberry_warranty')) {
+                continue;
+            }
+
             $this->prepare_item_payload($item);
         }
     }
@@ -80,7 +80,7 @@ class WC_Mulberry_Api_Rest_Send_Cart
         return array(
             'line_items' => $this->items_payload,
             'billing_address' => $this->prepare_address_data(),
-            'order_id' => (string) $this->order->get_id(),
+            'order_id' => (string) $this->order->get_order_number(),
         );
     }
 
@@ -116,21 +116,16 @@ class WC_Mulberry_Api_Rest_Send_Cart
     private function prepare_item_payload(WC_Order_Item $item)
     {
         /**
-         * Set flag, that the order has warranty products included
+         * @var $product WC_Product
          */
-        if ($warranty_meta_data = $item->get_meta('mulberry_warranty')) {
-            /**
-             * @var $product WC_Product
-             */
-            $product = $item->get_product();
+        $product = $item->get_product();
 
-            for ($i = 0; $i < (int) $item->get_quantity(); $i++) {
-                $this->items_payload[] = array(
-                    'product_id' => $product->get_sku(),
-                    'product_price' => (float) $product->get_price(),
-                    'product_title' => $product->get_name(),
-                );
-            }
+        for ($i = 0; $i < (int) $item->get_quantity(); $i++) {
+            $this->items_payload[] = array(
+                'product_id' => $product->get_sku(),
+                'product_price' => (float) $product->get_price(),
+                'product_title' => $product->get_name(),
+            );
         }
     }
 
@@ -141,6 +136,9 @@ class WC_Mulberry_Api_Rest_Send_Cart
      */
     private function parse_response($response)
     {
-        return $response;
+        return array(
+            'status' => $response['is_successful'] ? 'synced' : 'failed',
+            'response' => $response
+        );
     }
 }

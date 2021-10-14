@@ -29,15 +29,50 @@ class WC_Mulberry_Product_Addons
      */
     public function mulberry_add_warranty_to_product($quote_item_data)
     {
-        if (!empty($_POST['mulberry_warranty'])) {
-            $warranty_information = $this->get_warranty_information_by_hash($_POST['mulberry_warranty']);
+        $is_module_active = WC_Integration_Mulberry_Warranty::get_config_value('active') === 'yes';
+        $product_id = $_POST['add-to-cart'];
+        $product = wc_get_product( $product_id );
 
-            if (!empty($warranty_information)) {
-                $quote_item_data['mulberry_warranty'] = $warranty_information;
+        if ($is_module_active) {
+            if (array_key_exists('warranty', $_POST)) {
+                $warranty_sku = $_POST['warranty']['sku'];
+                $isValidWarrantyHash = false;
+
+                /**
+                 * Check whether we need to add warranty for this product or not
+                 */
+                if (isset($_POST['warranty']['hash']) && !empty($_POST['warranty']['hash']) && $warranty_sku === $this->get_selected_product_sku($product)) {
+                    $isValidWarrantyHash = true;
+                }
+
+                /**
+                 * Process additional warranty product add-to-cart
+                 */
+                if ($product && $product->get_id() && $isValidWarrantyHash) {
+                    $warranty_hash = $_POST['warranty']['hash'];
+
+                    /**
+                     * Prepare buyRequest and other options for warranty quote item
+                     */
+                    $warranty_information = $this->get_warranty_information_by_hash($warranty_hash);
+
+                    if (!empty($warranty_information)) {
+                        $quote_item_data['mulberry_warranty'] = $warranty_information;
+                    }
+                }
             }
         }
 
         return $quote_item_data;
+    }
+
+    /**
+     * @param WC_Product $product
+     * @return int|string
+     */
+    private function get_selected_product_sku(WC_Product $product)
+    {
+        return $product->get_sku() ? $product->get_sku() : $product->get_id();
     }
 
     /**
