@@ -282,7 +282,7 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
              * if you only want to return one record make the $returnSingleRow TRUE
              */
             if (count($result) == 1 && $returnSingleRow) {
-                $result = $this->convert_result_to_model($result[0]);
+                return $this->convert_result_to_model($result[0]);
             }
 
             $data = [];

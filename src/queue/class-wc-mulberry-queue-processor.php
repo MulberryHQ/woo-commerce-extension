@@ -33,7 +33,7 @@ class WC_Mulberry_Queue_Processor
             if (!$queue) {
                 throw new Exception(
                     __(sprintf('Invalid action type for order "#%1$s" and type "%2$s" is missing',
-                        $order->get_order_number(), $action_type), 'woocommerce-mulberry-warranty')
+                        $order->get_id(), $action_type), 'woocommerce-mulberry-warranty')
                 );
             }
 
