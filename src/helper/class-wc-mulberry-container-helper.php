@@ -53,12 +53,19 @@ class WC_Mulberry_Container_Helper
      */
     public function get_product_images($product)
     {
-        $attachment_ids = $product->get_gallery_image_ids();
+        $attachment_ids = array();
+        $product_image = $product->get_image_id();
 
-        $result = array();
+        // Add featured image.
+        if (!empty($product_image)) {
+            $attachment_ids[] = $product_image;
+        }
 
-        foreach( $attachment_ids as $attachment_id ) {
-            $result[] = wp_get_attachment_url( $attachment_id );
+        // Add gallery images.
+        $attachment_ids = array_merge($attachment_ids, $product->get_gallery_image_ids());
+
+        foreach ($attachment_ids as $attachment_id) {
+            $result[] = ['src' => wp_get_attachment_url($attachment_id)];
         }
 
         return json_encode($result);
