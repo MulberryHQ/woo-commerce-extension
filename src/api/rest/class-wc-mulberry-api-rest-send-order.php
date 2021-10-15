@@ -55,7 +55,11 @@ class WC_Mulberry_Api_Rest_Send_Order
         $this->prepare_items_payload();
 
         if (!$this->order_has_warranty_products) {
-            return array();
+            return $this->parse_response([
+                'is_successful' => false,
+                'error' => __(sprintf('No warranty products for order "#%1"', $order->get_order_number()),
+                    'woocommerce-mulberry-warranty'),
+            ]);
         }
 
         $payload = $this->get_order_payload();
@@ -88,10 +92,9 @@ class WC_Mulberry_Api_Rest_Send_Order
         $order = $this->order;
 
         return array(
-            'id' => $order->get_id(),
+            'id' => $order->get_order_number(),
             'phone' => $order->get_billing_phone(),
             'email' => $order->get_billing_email(),
-            'retailer_id' => WC_Integration_Mulberry_Warranty::get_config_value('retailer_id'),
             'cart_token' => $order->get_cart_hash(),
             'billing_address' => $this->prepare_address_data(),
             'line_items' => $this->warranty_items_payload,
@@ -133,17 +136,10 @@ class WC_Mulberry_Api_Rest_Send_Order
         if ($warranty_meta_data = $item->get_meta('mulberry_warranty')) {
             $this->order_has_warranty_products = true;
 
-            /**
-             * @var $product WC_Product
-             */
-            $product = $item->get_product();
-
             for ($i = 0; $i < (int) $item->get_quantity(); $i++) {
                 $this->warranty_items_payload[] = array(
-                    'product_id' => $product->get_sku(),
-                    'product_price' => (float) $product->get_price(),
-                    'product_title' => $product->get_name(),
                     'warranty_hash' => $warranty_meta_data['warranty_hash'],
+                    'warranty_offer_id' => $warranty_meta_data['warranty_offer_id'],
                 );
             }
         }
@@ -156,6 +152,23 @@ class WC_Mulberry_Api_Rest_Send_Order
      */
     private function parse_response($response)
     {
-        return $response;
+        return array(
+            'status' => $response['is_successful'] ? 'synced' : 'failed',
+            'response' => $response
+        );
+    }
+
+    public function order_has_warranty_products(WC_Order $order)
+    {
+        /**
+         * @var $item WC_Order_Item
+         */
+        foreach ($order->get_items() as $item) {
+            if ($item->get_meta('mulberry_warranty')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

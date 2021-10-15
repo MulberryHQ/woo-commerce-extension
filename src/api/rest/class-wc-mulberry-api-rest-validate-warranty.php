@@ -31,6 +31,7 @@ class WC_Mulberry_Api_Rest_Validate_Warranty
         'service_type' => array('service_type'),
         'warranty_hash' => array('warranty_hash'),
         'duration_months' => array('duration_months'),
+        'warranty_offer_id' => array('warranty_offer_id'),
     );
 
     /**
@@ -69,13 +70,14 @@ class WC_Mulberry_Api_Rest_Validate_Warranty
         /**
          * Warranty product information is stored in $response[0][0]
          */
-        $warranty_product = (is_array($response) && isset($response['message'][0][0])) ? $response['message'][0][0] : array();
+        $warranty_product = (is_array($response) && isset($response['message'])) ? $response['message'] : array();
 
         if (!empty($warranty_product) && $this->validate_warranty_product_response($warranty_product)) {
             $result = array(
                 'warranty_price' => (float) $warranty_product['cost'],
                 'service_type' => $warranty_product['service_type'],
                 'warranty_hash' => $warranty_product['warranty_hash'],
+                'warranty_offer_id' => $warranty_product['warranty_offer_id'],
                 'duration_months' => $warranty_product['duration_months'],
             );
         }

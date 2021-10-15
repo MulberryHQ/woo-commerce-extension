@@ -4,8 +4,8 @@ jQuery(document).ready(function() {
         productUpdateTimer: null,
         mulberryProductUpdateDelay: 1000,
         mulberryOverlayActive: false,
-        hasModal: false,
-        hasInline: false,
+        warrantyHashElement: '#warranty_hash',
+        warrantySkuElement: '#warranty_sku',
 
         /**
          * Register events
@@ -57,8 +57,6 @@ jQuery(document).ready(function() {
                     var settings = window.mulberry.core.settings;
 
                     if (settings.has_modal) {
-                        self.hasModal = true;
-
                         window.mulberry.modal.init({
                             offers,
                             settings,
@@ -73,7 +71,7 @@ jQuery(document).ready(function() {
                                 /**
                                  * Reset value for warranty element
                                  */
-                                jQuery('#warranty').val('');
+                                jQuery(this.warrantyHashElement).val('');
                             },
                             onWarrantyDecline: function() {
                                 window.mulberry.modal.close();
@@ -109,14 +107,15 @@ jQuery(document).ready(function() {
          */
         toggleWarranty: function toggleWarranty(data, isSelected) {
             var selectedWarrantyHash = '',
-                warrantyElement = jQuery('#warranty');
+                warrantyHashElement = jQuery(this.warrantyHashElement),
+                warrantySkuElement = jQuery(this.warrantySkuElement);
 
             if (data) {
                 selectedWarrantyHash = isSelected && data ? data.warranty_hash : '';
             }
 
-            warrantyElement.attr('name', 'mulberry_warranty');
-            warrantyElement.val(selectedWarrantyHash);
+            warrantySkuElement.val(window.mulberryProductData.product.id);
+            warrantyHashElement.val(selectedWarrantyHash);
         },
 
         /**
@@ -127,11 +126,14 @@ jQuery(document).ready(function() {
 
             if (window.mulberry) {
                 this.element.on('submit', function(evt) {
-                    if (self.hasModal) {
+                    if (window.mulberry.core.settings.has_modal) {
                         var e = null;
 
                         try {
-                            if (!self.mulberryOverlayActive && jQuery("#warranty").val() === "") {
+                            if (
+                                !self.mulberryOverlayActive &&
+                                jQuery(self.warrantyHashElement).val() === ""
+                            ) {
                                 evt.preventDefault();
                                 window.mulberry.modal.open();
                             }

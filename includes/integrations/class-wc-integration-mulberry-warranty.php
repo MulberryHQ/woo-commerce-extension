@@ -98,6 +98,13 @@ if (!class_exists('WC_Integration_Mulberry_Warranty')) {
                     'default' => 'no',
                     'description' => '',
                 ),
+                'enable_cron_sync' => array(
+                    'title' => __('Enable Async Order & Post Purchase Sync (Using cron)', 'woocommerce-mulberry-warranty'),
+                    'type' => 'checkbox',
+                    'label' => __('Yes', 'woocommerce-mulberry-warranty'),
+                    'default' => 'no',
+                    'description' => 'if selected - the data will be process through the "woocommerce_mulberry_warranty_queue" table, otherwise the data sync attempt will be performed on order place',
+                ),
             );
         }
 

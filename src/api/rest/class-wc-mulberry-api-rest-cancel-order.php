@@ -89,7 +89,7 @@ class WC_Mulberry_Api_Rest_Cancel_Order
 
         return array(
             'cancelled_date' => $date->date('Y-m-d'),
-            'order_id' => (string) $this->order->get_id(),
+            'order_id' => (string) $this->order->get_order_number(),
             'line_items' => $this->warranty_items_payload,
         );
     }
