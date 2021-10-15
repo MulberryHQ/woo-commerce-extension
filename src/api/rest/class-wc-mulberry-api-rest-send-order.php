@@ -95,7 +95,6 @@ class WC_Mulberry_Api_Rest_Send_Order
             'id' => $order->get_order_number(),
             'phone' => $order->get_billing_phone(),
             'email' => $order->get_billing_email(),
-            'retailer_id' => WC_Integration_Mulberry_Warranty::get_config_value('retailer_id'),
             'cart_token' => $order->get_cart_hash(),
             'billing_address' => $this->prepare_address_data(),
             'line_items' => $this->warranty_items_payload,

@@ -23,5 +23,5 @@ interface WC_Mulberry_Queue_Model_Interface
 
     public function delete_by_id($id);
 
-    public function find(array $filter, $condition = '=', $returnSingleRow = false);
+    public function find(array $filter, $condition = '=', $returnSingleRow = false, $limit = 0);
 }

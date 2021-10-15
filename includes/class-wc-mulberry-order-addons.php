@@ -71,6 +71,16 @@ class WC_Mulberry_Order_Addons
                 $queue->set('order_id', $order->get_id());
                 $queue->set('action_type', 'order');
                 $queue->save();
+
+                $cron_sync_enabled = WC_Integration_Mulberry_Warranty::get_config_value('enable_cron_sync') === 'yes';
+
+                /**
+                 * If async data sync is disabled, process this record immediately
+                 */
+                if (!$cron_sync_enabled) {
+                    $queue_processor = new WC_Mulberry_Queue_Processor();
+                    $queue_processor->process($order, 'order');
+                }
             }
         } catch (Exception $e) {
             $this->logger->log('Send Order Hook - '. $e->getMessage());
@@ -119,6 +129,15 @@ class WC_Mulberry_Order_Addons
                 $queue->set('order_id', $order->get_id());
                 $queue->set('action_type', 'cart');
                 $queue->save();
+
+                /**
+                 * If async data sync is disabled, process this record immediately
+                 */
+                $cron_sync_enabled = WC_Integration_Mulberry_Warranty::get_config_value('enable_cron_sync') === 'yes';
+                if (!$cron_sync_enabled) {
+                    $queue_processor = new WC_Mulberry_Queue_Processor();
+                    $queue_processor->process($order, 'cart');
+                }
             }
         } catch (Exception $e) {
             $this->logger->log('Send Cart Hook - '. $e->getMessage());

@@ -126,8 +126,6 @@ jQuery(document).ready(function() {
 
             if (window.mulberry) {
                 this.element.on('submit', function(evt) {
-                    console.log(window.mulberry.core.settings.has_modal);
-
                     if (window.mulberry.core.settings.has_modal) {
                         var e = null;
 

@@ -59,8 +59,7 @@ class WC_Mulberry_Queue_Processor
                 $this->logger->log(sprintf('Queue processor sync failed - %s', json_encode($response)));
             }
 
-            $date = as_get_datetime_object();
-            ActionScheduler_TimezoneHelper::set_local_timezone($date);
+            $date = new DateTime();
             $date_local = $date->format('Y-m-d H:i:s');
 
             $queue->set('sync_status', $response['status']);

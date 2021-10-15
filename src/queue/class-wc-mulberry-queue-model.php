@@ -240,7 +240,7 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
      * @param false $returnSingleRow
      * @return false|mixed
      */
-    public function find(array $filter = [], $condition = '=', $returnSingleRow = false)
+    public function find(array $filter = [], $condition = '=', $returnSingleRow = false, $limit = 0)
     {
         global $wpdb;
 
@@ -273,6 +273,10 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
                 }
 
                 $conditionCounter++;
+            }
+
+            if ((int) $limit > 0) {
+                $sql .= $wpdb->prepare(' LIMIT %d', (int) $limit);
             }
 
             $result = $wpdb->get_results($sql);
@@ -313,5 +317,15 @@ class WC_Mulberry_Queue_Model implements WC_Mulberry_Queue_Model_Interface
     public function get_by_order_id_and_action_type($order_id, $action_type)
     {
         return $this->find(array('order_id' => $order_id, 'action_type' => $action_type), '=', true);
+    }
+
+    /**
+     * Get a batch of pending queue records
+     *
+     * @return array|false|mixed
+     */
+    public function get_pending_records($batch = 10)
+    {
+        return $this->find(array('sync_status' => null), '=', false, $batch);
     }
 }

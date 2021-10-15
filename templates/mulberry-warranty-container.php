@@ -23,17 +23,14 @@ if (!$product->is_purchasable()) {
     return;
 }
 
-$settings = get_option('woocommerce_mulberry-warranty_settings');
-
-if (!$settings['active'] === 'yes') {
+if (!WC_Integration_Mulberry_Warranty::is_plugin_configured()) {
     return;
 }
 
 $sku = $product->get_sku() ? $product->get_sku() : $product->get_id();
-$gallery = [];
-foreach ($product->get_gallery_image_ids() as $attachment_id) {
-    $gallery[] = wp_get_attachment_url($attachment_id);
-}
+
+$helper = new WC_Mulberry_Container_Helper();
+$settings = get_option('woocommerce_mulberry-warranty_settings');
 
 if ($product->is_in_stock()): ?>
     <div class="mulberry-container-wrapper">
@@ -48,16 +45,13 @@ if ($product->is_in_stock()): ?>
                     id: "<?php echo esc_html($sku); ?>",
                     title: "<?php echo $product->get_name(); ?>",
                     price: <?php echo $product->get_price(); ?>,
-                    url: "<?php echo $product->get_permalink(); ?>"
-                    //images: <?php //echo json_encode($gallery); ?>//,
-                    //meta: {
-                    //    breadcrumbs: <?php //echo $this->getBreadcrumbsInfo(); ?>//,
-                    //},
-                    //description: "<?php //echo wc_format_content($product->get_description()); ?>//"
+                    url: "<?php echo $product->get_permalink(); ?>",
+                    images: <?php echo $helper->get_product_images($product); ?>,
+                    meta: {
+                        breadcrumbs: <?php echo $helper->get_breadcrumbs(); ?>,
+                    },
+                    description: "<?php echo wp_strip_all_tags(wc_format_content($product->get_description())); ?>"
                 }
-                //originalSku: "<?php //echo $product->get_sku(); ?>//",
-                //originalPrice: <?php //echo (float) $product->get_price(); ?>//,
-                //originalDescription: "<?php //echo wc_format_content($product->get_description()); ?>//"
             };
 
             window.mulberryConfigData = {

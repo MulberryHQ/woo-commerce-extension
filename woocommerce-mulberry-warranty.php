@@ -10,14 +10,18 @@
 /**
  * Register custom interfaces
  */
-function register_mulberry_interfaces()
+function register_critical_mulberry_assets()
 {
     include_once 'src/queue/interface-wc-mulberry-queue-model.php';
+    include_once 'src/exceptions/class-wc-mulberry-exception.php';
+    include_once 'src/logger/wc-mulberry-logger.php';
+    include_once 'src/queue/class-wc-mulberry-queue-cron.php';
 }
 
-register_mulberry_interfaces();
+register_critical_mulberry_assets();
 
 register_activation_hook( __FILE__, array( 'WC_Mulberry_Warranty', 'install' ) );
+register_deactivation_hook( __FILE__, array( 'WC_Mulberry_Warranty', 'deactivate' ) );
 
 if (!class_exists('WC_Mulberry_Warranty')) {
     class WC_Mulberry_Warranty
@@ -27,6 +31,9 @@ if (!class_exists('WC_Mulberry_Warranty')) {
          */
         public function __construct()
         {
+            /**
+             * Initialize the plugin.
+             */
             $this->define_constants();
 
             add_action('plugins_loaded', array($this, 'init'));
@@ -38,8 +45,7 @@ if (!class_exists('WC_Mulberry_Warranty')) {
          */
         public function init()
         {
-            $this->register_exceptions();
-            $this->register_loggers();
+            $this->register_helpers();
             $this->register_integrations();
             $this->register_custom_models();
             $this->register_templates();
@@ -104,19 +110,11 @@ if (!class_exists('WC_Mulberry_Warranty')) {
         }
 
         /**
-         * Register custom exception classes
+         * Register custom helpers
          */
-        private function register_exceptions()
+        private function register_helpers()
         {
-            include_once 'src/exceptions/class-wc-mulberry-exception.php';
-        }
-
-        /**
-         * Register custom Mulberry logger
-         */
-        private function register_loggers()
-        {
-            include_once 'src/logger/wc-mulberry-logger.php';
+            include_once 'src/helper/class-wc-mulberry-container-helper.php';
         }
 
         /**
@@ -152,8 +150,14 @@ if (!class_exists('WC_Mulberry_Warranty')) {
             return array_merge($settings, $actions);
         }
 
-        public function install()
+        /**
+         * Init installation/activation hooks
+         */
+        public static function install()
         {
+            /**
+             * Create a custom table to process orders & post purchase events async
+             */
             global $wpdb;
             $charset_collate = $wpdb->get_charset_collate();
             $table = $wpdb->prefix . WC_Mulberry_Queue_Model_Interface::TABLE_NAME;
@@ -172,6 +176,21 @@ if (!class_exists('WC_Mulberry_Warranty')) {
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
             dbDelta($sql);
+
+            /**
+             * Set up crons.
+             */
+            $cron = new WC_Mulberry_Queue_Cron();
+            $cron->activate();
+        }
+
+        /**
+         * Deactivate the plugin
+         */
+        public static function deactivate()
+        {
+            $cron = new WC_Mulberry_Queue_Cron();
+            $cron->deactivate();
         }
     }
 
