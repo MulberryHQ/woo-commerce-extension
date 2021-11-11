@@ -41,7 +41,7 @@ class WC_Mulberry_Product_Addons
                 /**
                  * Check whether we need to add warranty for this product or not
                  */
-                if (isset($_POST['warranty']['hash']) && !empty($_POST['warranty']['hash']) && $warranty_sku === $this->get_selected_product_sku($product)) {
+                if (isset($_POST['warranty']['hash']) && !empty($_POST['warranty']['hash']) && $warranty_sku === (string) $this->get_selected_product_sku($product)) {
                     $isValidWarrantyHash = true;
                 }
 
@@ -99,8 +99,9 @@ class WC_Mulberry_Product_Addons
                  * @var $product WC_Product
                  */
                 $product = $item['data'];
+		 $wcProduct = wc_get_product( $item['product_id'] );
 
-                $original_price = $product->get_price();
+                $original_price = $wcProduct->get_price(); // get product's original price here.
                 $updated_price = (float) $original_price + (float) $item['mulberry_warranty']['warranty_price'];
 
                 $product->set_price($updated_price);

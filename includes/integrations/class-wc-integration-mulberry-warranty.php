@@ -146,7 +146,7 @@ if (!class_exists('WC_Integration_Mulberry_Warranty')) {
 
             if ($settings && is_array($settings)) {
                 foreach ($required_settings as $setting) {
-                    if (!array_key_exists($setting, $settings)) {
+                    if (!array_key_exists($setting, $settings) || ($setting === 'active' && $settings['active'] === 'no')) {
                         return false;
                     }
                 }

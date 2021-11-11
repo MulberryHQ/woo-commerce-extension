@@ -126,7 +126,7 @@ jQuery(document).ready(function() {
 
             if (window.mulberry) {
                 this.element.on('submit', function(evt) {
-                    if (window.mulberry.core.settings.has_modal) {
+                    if (window.mulberry.core.settings.has_modal && window.mulberry.core.offers.length) {
                         var e = null;
 
                         try {
