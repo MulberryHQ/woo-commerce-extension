@@ -54,6 +54,7 @@ class WC_Mulberry_Container_Helper
     public function get_product_images($product)
     {
         $attachment_ids = array();
+        $result = array();
         $product_image = $product->get_image_id();
 
         // Add featured image.
