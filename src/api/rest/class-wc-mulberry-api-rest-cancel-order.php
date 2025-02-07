@@ -52,6 +52,13 @@ class WC_Mulberry_Api_Rest_Cancel_Order
     public function cancel_order(WC_Order $order)
     {
         $this->order = $order;
+
+        /**
+         * Reset values
+         */
+        $this->warranty_items_payload = [];
+        $this->order_has_warranty_products = false;
+
         $this->prepare_items_payload();
 
         if (!$this->order_has_warranty_products) {

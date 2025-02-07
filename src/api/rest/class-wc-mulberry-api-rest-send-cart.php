@@ -47,6 +47,12 @@ class WC_Mulberry_Api_Rest_Send_Cart
     public function send_cart(WC_Order $order)
     {
         $this->order = $order;
+
+        /**
+         * Reset values
+         */
+        $this->items_payload = [];
+
         $this->prepare_items_payload();
 
         $payload = $this->get_order_payload();
