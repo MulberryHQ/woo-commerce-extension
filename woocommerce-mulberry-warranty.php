@@ -4,7 +4,7 @@
  * Description: A Mulberry extended warranty WooCommerce integration plugin.
  * Author: GetMulberry.com
  * Author URI: https://getmulberry.com/
- * Version: 1.1.0
+ * Version: 1.2.0
  */
 
 /**
