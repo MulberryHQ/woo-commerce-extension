@@ -28,4 +28,4 @@ if (!function_exists('add_mulberry_product_container')) {
     }
 }
 
-add_action('woocommerce_after_add_to_cart_button', 'add_mulberry_product_container');
+add_action('woocommerce_before_add_to_cart_button', 'add_mulberry_product_container');
