@@ -34,7 +34,7 @@ $settings = get_option('woocommerce_mulberry-warranty_settings');
 
 if ($product->is_in_stock()): ?>
     <div class="mulberry-container-wrapper">
-        <div class="mulberry-inline-container"></div>
+        <div class="mulberry-inline-container" style="max-width: 350px;"></div>
         <input type="hidden" id="warranty_hash" name="warranty[hash]" value=""/>
         <input type="hidden" id="warranty_sku" name="warranty[sku]" value="<?php echo esc_html($sku); ?>"/>
         <input type="hidden" id="warranty" name="mulberry_warranty" value=""/>
